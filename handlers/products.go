@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	productdto "waysbucks/dto/product"
@@ -10,9 +9,10 @@ import (
 	"waysbucks/models"
 	"waysbucks/repositories"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 )
+
+var path_file_product = "http://localhost:5000/uploads/"
 
 type handlersProduct struct {
 	ProductRepository repositories.ProductRepository
@@ -32,6 +32,10 @@ func (h *handlersProduct) FindProducts(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(response)
 	}
 
+	for i, p := range products {
+		products[i].Image = path_file_product + p.Image
+	}
+
 	w.WriteHeader(http.StatusOK)
 	response := dto.SuccessResult{Code: "Success", Data: products}
 	json.NewEncoder(w).Encode(response)
@@ -42,42 +46,45 @@ func (h *handlersProduct) GetProduct(w http.ResponseWriter, r *http.Request) {
 
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 
-	products, err := h.ProductRepository.GetProduct(id)
+	product, err := h.ProductRepository.GetProduct(id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
 		json.NewEncoder(w).Encode(response)
 	}
 
+	product.Image = path_file + product.Image
+
 	w.WriteHeader(http.StatusOK)
-	response := dto.SuccessResult{Code: "Success", Data: products}
+	response := dto.SuccessResult{Code: "Success", Data: product}
 	json.NewEncoder(w).Encode(response)
 }
 
 func (h *handlersProduct) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	request := new(productdto.CreateProduct)
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: "hai"}
-		json.NewEncoder(w).Encode(response)
-		return
+	dataContex := r.Context().Value("dataFile") // add this code
+	filename := dataContex.(string)
+
+	price, _ := strconv.Atoi(r.FormValue("price"))
+	request := productdto.CreateProduct{
+		Title: r.FormValue("title"),
+		Price: price,
 	}
 
-	validate := validator.New()
-	err := validate.Struct(request)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: "hello"}
-		json.NewEncoder(w).Encode(response)
-		return
-	}
+	// validate := validator.New()
+	// err := validate.Struct(request)
+	// if err != nil {
+	// 	w.WriteHeader(http.StatusBadRequest)
+	// 	response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
+	// 	json.NewEncoder(w).Encode(response)
+	// 	return
+	// }
 
 	product := models.Product{
 		Title: request.Title,
 		Price: request.Price,
-		Image: request.Image,
+		Image: filename,
 	}
 
 	data, err := h.ProductRepository.CreateProduct(product)
@@ -146,8 +153,6 @@ func (h *handlersProduct) DeleteProduct(w http.ResponseWriter, r *http.Request) 
 		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
 		json.NewEncoder(w).Encode(response)
 	}
-
-	fmt.Println(product)
 
 	data, err := h.ProductRepository.DeleteProduct(product)
 	if err != nil {

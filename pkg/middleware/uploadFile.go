@@ -20,7 +20,7 @@ func UploadFile(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		defer file.Close()
-		fmt.Printf("Uploaded: %+v\n", handler.Filename)
+		// fmt.Printf("Uploaded: %+v\n", handler.Filename)
 		const MAX_UPLOAD_SIZE = 10 << 20
 		r.ParseMultipartForm(MAX_UPLOAD_SIZE)
 		if r.ContentLength > MAX_UPLOAD_SIZE {
@@ -30,7 +30,7 @@ func UploadFile(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		tempFile, err := ioutil.TempFile("uploads", "image-*"+handler.Filename+".png")
+		tempFile, err := ioutil.TempFile("uploads", "image-*-"+handler.Filename)
 		if err != nil {
 			fmt.Println(err)
 			fmt.Println("path upload error")
