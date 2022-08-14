@@ -80,6 +80,7 @@ func (h *handlersProfile) CreateProfile(w http.ResponseWriter, r *http.Request) 
 		City:       request.City,
 		PostalCode: request.PostalCode,
 		Image:      request.Image,
+		UserID:     request.UserID,
 	}
 
 	data, err := h.ProfileRepository.CreateProfile(profile)
@@ -167,11 +168,14 @@ func (h *handlersProfile) DeleteProfile(w http.ResponseWriter, r *http.Request) 
 }
 
 func convertResponseProfile(u models.Profile) profiledto.ProfileResponse {
+	fmt.Println(u)
 	return profiledto.ProfileResponse{
 		Image:      u.Image,
 		Phone:      u.Phone,
 		Address:    u.Address,
 		PostalCode: u.PostalCode,
 		City:       u.City,
+		UserID:     u.UserID,
+		User:       u.User,
 	}
 }

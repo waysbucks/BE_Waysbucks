@@ -50,7 +50,7 @@ func (h *handlersProduct) GetProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	response := dto.SuccessResult{Code: "Success", Data: convertResponseProduct(products)}
+	response := dto.SuccessResult{Code: "Success", Data: products}
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -111,7 +111,8 @@ func (h *handlersProduct) UpdateProduct(w http.ResponseWriter, r *http.Request) 
 		json.NewEncoder(w).Encode(response)
 	}
 
-	if request.Title != "" {
+	// len > 0
+	if (request.Title) != "" {
 		product.Title = request.Title
 	}
 

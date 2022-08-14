@@ -24,14 +24,14 @@ func RepositoryProfile(db *gorm.DB) *repository {
 
 func (r *repository) FindProfiles() ([]models.Profile, error) {
 	var profiles []models.Profile
-	err := r.db.Find(&profiles).Error
+	err := r.db.Preload("User").Find(&profiles).Error
 
 	return profiles, err
 }
 
 func (r *repository) GetProfile(ID int) (models.Profile, error) {
 	var profile models.Profile
-	err := r.db.First(&profile, ID).Error
+	err := r.db.Debug().Preload("User").First(&profile, ID).Error
 
 	return profile, err
 }

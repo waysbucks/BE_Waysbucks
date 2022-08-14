@@ -9,12 +9,12 @@ import (
 )
 
 func ProfileRoutes(r *mux.Router) {
-	productRepository := repositories.RepositoryTopping(mysql.DB)
-	h := handlers.HandlerProduct(productRepository)
+	profileRepository := repositories.RepositoryProfile(mysql.DB)
+	h := handlers.HandlerProfile(profileRepository)
 
-	r.HandleFunc("/products", h.FindProducts).Methods("GET")
-	r.HandleFunc("/product/{id}", h.GetProduct).Methods("GET")
-	r.HandleFunc("/product", h.CreateProduct).Methods("POST")
-	r.HandleFunc("/product/{id}", h.UpdateProduct).Methods("PATCH")
-	r.HandleFunc("/product/{id}", h.DeleteProduct).Methods("DELETE")
+	r.HandleFunc("/profiles", h.FindProfiles).Methods("GET")
+	r.HandleFunc("/profile/{id}", h.GetProfile).Methods("GET")
+	r.HandleFunc("/profile", h.CreateProfile).Methods("POST")
+	r.HandleFunc("/profile/{id}", h.UpdateProfile).Methods("PATCH")
+	r.HandleFunc("/profile/{id}", h.DeleteProfile).Methods("DELETE")
 }

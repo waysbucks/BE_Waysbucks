@@ -14,10 +14,6 @@ type ToppingRepository interface {
 	DeleteTopping(topping models.Topping) (models.Topping, error)
 }
 
-// type repository struct {
-// 	db *gorm.DB
-// }
-
 func RepositoryTopping(db *gorm.DB) *repository {
 	return &repository{db}
 }

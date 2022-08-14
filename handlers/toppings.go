@@ -42,7 +42,7 @@ func (h *handlersTopping) GetTopping(w http.ResponseWriter, r *http.Request) {
 
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 
-	toppings, err := h.ToppingRepository.GetTopping(id)
+	topping, err := h.ToppingRepository.GetTopping(id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
@@ -50,7 +50,7 @@ func (h *handlersTopping) GetTopping(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	response := dto.SuccessResult{Code: "Success", Data: convertResponseTopping(toppings)}
+	response := dto.SuccessResult{Code: "Success", Data: topping}
 	json.NewEncoder(w).Encode(response)
 }
 
