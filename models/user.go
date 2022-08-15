@@ -8,8 +8,9 @@ type User struct {
 	Email    string `json:"email" gorm:"type: varchar(255)"`
 	Password string `json:"password" gorm:"type: varchar(255)"`
 	// Profile   ProfileResponse `json:"profile"`
-	CreatedAt time.Time `json:"-"`
-	UpdatedAt time.Time `json:"-"`
+	Cart      []UserCart `json:"cart"`
+	CreatedAt time.Time  `json:"-"`
+	UpdatedAt time.Time  `json:"-"`
 }
 
 type UserProfile struct {

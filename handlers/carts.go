@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	profiledto "waysbucks/dto/profile"
+	cartdto "waysbucks/dto/cart"
 	dto "waysbucks/dto/result"
 	"waysbucks/models"
 	"waysbucks/repositories"
@@ -13,18 +13,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type handlersProfile struct {
-	ProfileRepository repositories.ProfileRepository
+var path_file_cart = "http://localhost:5000/uploads/"
+
+type handlersCart struct {
+	CartRepository repositories.CartRepository
 }
 
-func HandlerProfile(ProfileRepository repositories.ProfileRepository) *handlersProfile {
-	return &handlersProfile{ProfileRepository}
+func HandlerCart(CartRepository repositories.CartRepository) *handlersCart {
+	return &handlersCart{CartRepository}
 }
 
-func (h *handlersProfile) FindProfiles(w http.ResponseWriter, r *http.Request) {
+func (h *handlersCart) FindCarts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	profiles, err := h.ProfileRepository.FindProfiles()
+	carts, err := h.CartRepository.FindCarts()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
@@ -32,16 +34,16 @@ func (h *handlersProfile) FindProfiles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	response := dto.SuccessResult{Code: "Success", Data: profiles}
+	response := dto.SuccessResult{Code: "Success", Data: carts}
 	json.NewEncoder(w).Encode(response)
 }
 
-func (h *handlersProfile) GetProfile(w http.ResponseWriter, r *http.Request) {
+func (h *handlersCart) GetCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 
-	profiles, err := h.ProfileRepository.GetProfile(id)
+	cart, err := h.CartRepository.GetCart(id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
@@ -49,40 +51,36 @@ func (h *handlersProfile) GetProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	response := dto.SuccessResult{Code: "Success", Data: convertResponseProfile(profiles)}
+	response := dto.SuccessResult{Code: "Success", Data: cart}
 	json.NewEncoder(w).Encode(response)
 }
 
-func (h *handlersProfile) CreateProfile(w http.ResponseWriter, r *http.Request) {
+func (h *handlersCart) CreateCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	request := new(profiledto.CreateProfile)
+	request := new(cartdto.CreateCart)
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: "hai"}
+		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
 		json.NewEncoder(w).Encode(response)
-		return
 	}
 
 	validate := validator.New()
 	err := validate.Struct(request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: "hello"}
+		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
 		json.NewEncoder(w).Encode(response)
 		return
 	}
 
-	profile := models.Profile{
-		Phone:      request.Phone,
-		Address:    request.Address,
-		City:       request.City,
-		PostalCode: request.PostalCode,
-		Image:      request.Image,
-		UserID:     request.UserID,
+	cart := models.Cart{
+		UserID:    request.UserID,
+		ProductID: request.ProductID,
+		ToppingID: request.ToppingID,
 	}
 
-	data, err := h.ProfileRepository.CreateProfile(profile)
+	data, err := h.CartRepository.CreateCart(cart)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
@@ -90,14 +88,14 @@ func (h *handlersProfile) CreateProfile(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.WriteHeader(http.StatusOK)
-	response := dto.SuccessResult{Code: "Success", Data: convertResponseProfile(data)}
+	response := dto.SuccessResult{Code: "Success", Data: data}
 	json.NewEncoder(w).Encode(response)
 }
 
-func (h *handlersProfile) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+func (h *handlersCart) UpdateCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	request := new(profiledto.UpdateProfile)
+	request := new(cartdto.UpdateCart)
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
@@ -106,53 +104,27 @@ func (h *handlersProfile) UpdateProfile(w http.ResponseWriter, r *http.Request) 
 	}
 
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
-	profile, err := h.ProfileRepository.GetProfile(int(id))
+	cart, err := h.CartRepository.GetCart(int(id))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
 		json.NewEncoder(w).Encode(response)
 	}
 
-	if request.Phone != "" {
-		profile.Phone = request.Phone
-	}
-	if request.Address != "" {
-		profile.Address = request.Address
-	}
-	if request.City != "" {
-		profile.City = request.City
-	}
-	if request.PostalCode != 0 {
-		profile.PostalCode = request.PostalCode
-	}
-	if request.Image != "" {
-		profile.Image = request.Image
+	// len > 0
+	if (request.UserID) != 0 {
+		cart.UserID = request.UserID
 	}
 
-	data, err := h.ProfileRepository.UpdateProfile(profile)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		response := dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()}
-		json.NewEncoder(w).Encode(response)
+	if request.ProductID != 0 {
+		cart.ProductID = request.ProductID
 	}
 
-	w.WriteHeader(http.StatusOK)
-	response := dto.SuccessResult{Code: "Success", Data: convertResponseProfile(data)}
-	json.NewEncoder(w).Encode(response)
-}
+	// if request.ToppingID != 0 {
+	// 	cart.ToppingID = request.ToppingID
+	// }
 
-func (h *handlersProfile) DeleteProfile(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	id, _ := strconv.Atoi(mux.Vars(r)["id"])
-	profile, err := h.ProfileRepository.GetProfile(id)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
-		json.NewEncoder(w).Encode(response)
-	}
-
-	data, err := h.ProfileRepository.DeleteProfile(profile)
+	data, err := h.CartRepository.UpdateCart(cart)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		response := dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()}
@@ -164,14 +136,25 @@ func (h *handlersProfile) DeleteProfile(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(response)
 }
 
-func convertResponseProfile(u models.Profile) profiledto.ProfileResponse {
-	return profiledto.ProfileResponse{
-		Image:      u.Image,
-		Phone:      u.Phone,
-		Address:    u.Address,
-		PostalCode: u.PostalCode,
-		City:       u.City,
-		UserID:     u.UserID,
-		User:       u.User,
+func (h *handlersCart) DeleteCart(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	cart, err := h.CartRepository.GetCart(id)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
+		json.NewEncoder(w).Encode(response)
 	}
+
+	data, err := h.CartRepository.DeleteCart(cart)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		response := dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()}
+		json.NewEncoder(w).Encode(response)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	response := dto.SuccessResult{Code: "Success", Data: data}
+	json.NewEncoder(w).Encode(response)
 }

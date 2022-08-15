@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	productdto "waysbucks/dto/product"
@@ -102,13 +103,13 @@ func (h *handlersProduct) CreateProduct(w http.ResponseWriter, r *http.Request) 
 func (h *handlersProduct) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	request := new(productdto.UpdateProduct)
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
-		json.NewEncoder(w).Encode(response)
-		return
+	price, _ := strconv.Atoi(r.FormValue("price"))
+	request := productdto.CreateProduct{
+		Title: r.FormValue("title"),
+		Price: price,
+		Image: r.FormValue("image"),
 	}
+	fmt.Println("testttttttttttttttttttttttt", r.FormValue("title"))
 
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	product, err := h.ProductRepository.GetProduct(int(id))

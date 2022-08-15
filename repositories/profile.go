@@ -14,10 +14,6 @@ type ProfileRepository interface {
 	DeleteProfile(profile models.Profile) (models.Profile, error)
 }
 
-// type repository struct {
-// 	db *gorm.DB
-// }
-
 func RepositoryProfile(db *gorm.DB) *repository {
 	return &repository{db}
 }
