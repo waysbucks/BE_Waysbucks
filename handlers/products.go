@@ -103,13 +103,15 @@ func (h *handlersProduct) CreateProduct(w http.ResponseWriter, r *http.Request) 
 func (h *handlersProduct) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
+	dataContex := r.Context().Value("dataFile") // add this code
+	filename := dataContex.(string)
+
 	price, _ := strconv.Atoi(r.FormValue("price"))
 	request := productdto.CreateProduct{
 		Title: r.FormValue("title"),
 		Price: price,
-		Image: r.FormValue("image"),
+		Image: filename,
 	}
-	fmt.Println("testttttttttttttttttttttttt", r.FormValue("title"))
 
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	product, err := h.ProductRepository.GetProduct(int(id))
@@ -131,6 +133,8 @@ func (h *handlersProduct) UpdateProduct(w http.ResponseWriter, r *http.Request) 
 	if request.Image != "" {
 		product.Image = request.Image
 	}
+
+	fmt.Println(request.Image)
 
 	data, err := h.ProductRepository.UpdateProduct(product)
 	if err != nil {
