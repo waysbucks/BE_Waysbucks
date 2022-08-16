@@ -12,6 +12,7 @@ type CartRepository interface {
 	CreateCart(Cart models.Cart) (models.Cart, error)
 	UpdateCart(Cart models.Cart) (models.Cart, error)
 	DeleteCart(Cart models.Cart) (models.Cart, error)
+	CreateTransactionID(transaction models.Transaction) (models.Transaction, error)
 }
 
 // type repository struct {
@@ -52,4 +53,10 @@ func (r *repository) DeleteCart(cart models.Cart) (models.Cart, error) {
 	err := r.db.Delete(&cart).Error
 
 	return cart, err
+}
+
+func (r *repository) CreateTransactionID(transaction models.Transaction) (models.Transaction, error) {
+	err := r.db.Create(&transaction).Error
+
+	return transaction, err
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	dto "waysbucks/dto/result"
@@ -11,16 +12,45 @@ import (
 
 func UploadFile(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		file, handler, err := r.FormFile("image")
-		fmt.Println(handler.Filename)
+
+		if err != nil && r.Method == "PATCH" {
+			ctx := context.WithValue(r.Context(), "dataFile", "false")
+			next.ServeHTTP(w, r.WithContext(ctx))
+		}
 
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(handler)
 			json.NewEncoder(w).Encode("Error Retriving the File")
 			return
 		}
 
 		defer file.Close()
+
+		buff := make([]byte, 512)
+		_, err = file.Read(buff)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			response := dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()}
+			json.NewEncoder(w).Encode(response)
+		}
+
+		filetype := http.DetectContentType(buff)
+		if filetype != "image/jpeg" && filetype != "image/png" {
+			w.WriteHeader(http.StatusInternalServerError)
+			response := dto.ErrorResult{Code: http.StatusInternalServerError, Message: "Format Image not a JPEG or PNG "}
+			json.NewEncoder(w).Encode(response)
+		}
+
+		_, err = file.Seek(0, io.SeekStart)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			response := dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()}
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
 		// fmt.Printf("Uploaded: %+v\n", handler.Filename)
 		const MAX_UPLOAD_SIZE = 10 << 20
 		r.ParseMultipartForm(MAX_UPLOAD_SIZE)

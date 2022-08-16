@@ -110,7 +110,6 @@ func (h *handlersAuth) Login(w http.ResponseWriter, r *http.Request) {
 	claims["exp"] = time.Now().Add(time.Hour * 2).Unix()
 
 	token, errGenerateToken := jwtToken.GenerateToken(&claims)
-	fmt.Println(errGenerateToken)
 	if errGenerateToken != nil {
 		log.Println(errGenerateToken)
 		fmt.Println("Unauthorize")

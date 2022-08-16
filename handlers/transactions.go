@@ -71,9 +71,7 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 	}
 
 	transaction := models.Transaction{
-		UserID:    request.UserID,
-		ToppingID: request.ToppingID,
-		ProductID: request.ProductID,
+		UserID: request.UserID,
 	}
 
 	data, err := h.TransactionRepository.CreateTransaction(transaction)
@@ -108,14 +106,6 @@ func (h *handlerTransaction) UpdateTransaction(w http.ResponseWriter, r *http.Re
 
 	if request.UserID != 0 {
 		transaction.UserID = request.UserID
-	}
-
-	if request.ToppingID != 0 {
-		transaction.ToppingID = request.ToppingID
-	}
-
-	if request.ProductID != 0 {
-		transaction.ProductID = request.ProductID
 	}
 
 	data, err := h.TransactionRepository.UpdateTransaction(transaction)

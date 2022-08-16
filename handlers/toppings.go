@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	dto "waysbucks/dto/result"
@@ -103,12 +102,14 @@ func (h *handlersTopping) CreateTopping(w http.ResponseWriter, r *http.Request) 
 func (h *handlersTopping) UpdateTopping(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	request := new(toppingdto.UpdateTopping)
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
-		json.NewEncoder(w).Encode(response)
-		return
+	dataContex := r.Context().Value("dataFile") // add this code
+	filename := dataContex.(string)
+
+	price, _ := strconv.Atoi(r.FormValue("price"))
+	request := toppingdto.CreateTopping{
+		Title: r.FormValue("title"),
+		Price: price,
+		Image: filename,
 	}
 
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
@@ -153,8 +154,6 @@ func (h *handlersTopping) DeleteTopping(w http.ResponseWriter, r *http.Request) 
 		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
 		json.NewEncoder(w).Encode(response)
 	}
-
-	fmt.Println(topping)
 
 	data, err := h.ToppingRepository.DeleteTopping(topping)
 	if err != nil {

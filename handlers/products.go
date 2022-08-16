@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	productdto "waysbucks/dto/product"
@@ -64,7 +63,7 @@ func (h *handlersProduct) GetProduct(w http.ResponseWriter, r *http.Request) {
 func (h *handlersProduct) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	dataContex := r.Context().Value("dataFile") // add this code
+	dataContex := r.Context().Value("dataFile")
 	filename := dataContex.(string)
 
 	price, _ := strconv.Atoi(r.FormValue("price"))
@@ -103,7 +102,7 @@ func (h *handlersProduct) CreateProduct(w http.ResponseWriter, r *http.Request) 
 func (h *handlersProduct) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	dataContex := r.Context().Value("dataFile") // add this code
+	dataContex := r.Context().Value("dataFile")
 	filename := dataContex.(string)
 
 	price, _ := strconv.Atoi(r.FormValue("price"))
@@ -130,11 +129,9 @@ func (h *handlersProduct) UpdateProduct(w http.ResponseWriter, r *http.Request) 
 		product.Price = request.Price
 	}
 
-	if request.Image != "" {
-		product.Image = request.Image
+	if filename != "false" {
+		product.Image = filename
 	}
-
-	fmt.Println(request.Image)
 
 	data, err := h.ProductRepository.UpdateProduct(product)
 	if err != nil {
