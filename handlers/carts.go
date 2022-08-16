@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	cartdto "waysbucks/dto/cart"
@@ -11,6 +10,7 @@ import (
 	"waysbucks/repositories"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
 )
 
@@ -52,19 +52,15 @@ func (h *handlersCart) GetCart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	response := dto.SuccessResult{Code: "Success", Data: cart}
+	response := dto.SuccessResult{Code: "Success", Data: convertResponseCart(cart)}
 	json.NewEncoder(w).Encode(response)
 }
 
 func (h *handlersCart) CreateCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var toppingID []int
-	for _, r := range r.FormValue("topping_id") {
-		fmt.Println("aaaaaaaaaa", r)
-		if int(r-'0') >= 0 {
-			toppingID = append(toppingID, int(r-'0'))
-		}
-	}
+
+	userInfo := r.Context().Value("userInfo").(jwt.MapClaims)
+	idTrans := int(userInfo["time"].(float64))
 
 	request := new(cartdto.CreateCart)
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -82,23 +78,39 @@ func (h *handlersCart) CreateCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	idTransaction := models.Transaction{
-		ID:     1,
-		UserID: 1,
-	}
-	transID, err := h.CartRepository.CreateTransactionID(idTransaction)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
-		json.NewEncoder(w).Encode(response)
-	}
+	// var toppingId []int
+	// for _, r := range r.FormValue("toppingId") {
+	// 	if int(r-'0') >= 0 {
+	// 		toppingId = append(toppingId, int(r-'0'))
+	// 	}
+	// }
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 
-	cart := models.Cart{
-		ProductID:     1,
-		TransactionID: transID.ID,
+	requestForm := models.Cart{
+		ProductID:     id,
+		TransactionID: idTrans,
 		QTY:           request.QTY,
 		SubTotal:      request.SubTotal,
-		ToppingID:     toppingID,
+		ToppingID:     request.ToppingID,
+	}
+
+	validatee := validator.New()
+	errr := validatee.Struct(requestForm)
+	if errr != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	topping, _ := h.CartRepository.FindToppingsID(request.ToppingID)
+
+	cart := models.Cart{
+		ProductID:     id,
+		TransactionID: idTrans,
+		QTY:           request.QTY,
+		SubTotal:      request.SubTotal,
+		Topping:       topping,
 	}
 
 	data, err := h.CartRepository.CreateCart(cart)
@@ -137,10 +149,6 @@ func (h *handlersCart) UpdateCart(w http.ResponseWriter, r *http.Request) {
 		cart.ProductID = request.ProductID
 	}
 
-	// if request.ToppingID != 0 {
-	// 	cart.ToppingID = request.ToppingID
-	// }
-
 	data, err := h.CartRepository.UpdateCart(cart)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -174,4 +182,31 @@ func (h *handlersCart) DeleteCart(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	response := dto.SuccessResult{Code: "Success", Data: data}
 	json.NewEncoder(w).Encode(response)
+}
+
+func (h *handlersCart) FindCartsByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	id := 1
+
+	cart, err := h.CartRepository.FindCartsTransaction(id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
+		json.NewEncoder(w).Encode(response)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	response := dto.SuccessResult{Code: "Success", Data: cart}
+	json.NewEncoder(w).Encode(response)
+}
+
+func convertResponseCart(u models.Cart) models.Cart {
+	return models.Cart{
+		ID:       u.ID,
+		QTY:      u.QTY,
+		SubTotal: u.SubTotal,
+		Product:  u.Product,
+		Topping:  u.Topping,
+	}
 }

@@ -9,18 +9,17 @@ type Cart struct {
 	ToppingID     []int              `json:"topping_id" gorm:"-"`
 	Topping       []Topping          `json:"topping" gorm:"many2many:cart_toppings"`
 	TransactionID int                `json:"transaction_id"`
-	Transaction   Transaction        `json:"transaction"`
 }
 
-type UserCart struct {
+type TransactionCart struct {
 	ID        int                `json:"id"`
 	UserID    int                `json:"user_id"`
 	ProductID int                `json:"product_id"`
 	ToppingID int                `json:"topping_id"`
 	Product   ProductTransaction `json:"product"`
-	Topping   ToppingTransaction `json:"topping"`
+	Topping   []Topping          `json:"topping"`
 }
 
-func (UserCart) TableName() string {
+func (TransactionCart) TableName() string {
 	return "carts"
 }

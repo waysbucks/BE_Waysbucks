@@ -1,12 +1,12 @@
 package cartdto
 
 type CreateCart struct {
-	UserID        int   `json:"user_id"`
-	ProductID     int   `json:"product_id"`
-	ToppingID     []int `json:"topping_id"`
-	TransactionID []int `json:"transaction_id"`
-	QTY           int   `json:"qty"`
-	SubTotal      int   `json:"subtotal"`
+	ID        int   `json:"id"`
+	UserID    int   `json:"user_id"`
+	ProductID int   `json:"product_id"`
+	ToppingID []int `json:"topping_id"`
+	QTY       int   `json:"qty"`
+	SubTotal  int   `json:"subtotal"`
 }
 
 type UpdateCart struct {
@@ -16,7 +16,7 @@ type UpdateCart struct {
 }
 
 type CartResponse struct {
-	UserID    int `json:"user_id"`
-	ProductID int `json:"product_id"`
-	ToppingID int `json:"topping_id"`
+	ID       int `json:"id"`
+	QTY      int `json:"qty"`
+	SubTotal int `json:"subtotal"`
 }
